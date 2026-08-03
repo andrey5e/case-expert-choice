@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Админ-панель</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2a3a5e;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .header h1 { font-size: 24px; color: #4a9eff; }
+
+        .birthday-widget {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #16213e;
+            padding: 6px 16px 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #2a3a5e;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .birthday-widget:hover {
+            border-color: #4a9eff;
+            background: #1a2a4a;
+        }
+        .birthday-widget .icon { font-size: 18px; }
+        .birthday-widget .badge {
+            background: #f5576c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 0 8px;
+            border-radius: 10px;
+            line-height: 18px;
+            min-width: 18px;
+            text-align: center;
+        }
+        .birthday-widget .badge.zero { background: #2a3a5e; color: #6a7a9a; }
+        .birthday-widget .arrow { font-size: 12px; color: #6a7a9a; }
+
+        .birthday-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: #16213e;
+            border: 1px solid #2a3a5e;
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 260px;
+            max-width: 320px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            z-index: 100;
+            display: none;
+        }
+        .birthday-dropdown.open { display: block; }
+        .birthday-dropdown .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #1a2a3a;
+            gap: 12px;
+        }
+        .birthday-dropdown .item:last-child { border-bottom: none; }
+        .birthday-dropdown .item .info .name { font-size: 14px; font-weight: 600; }
+        .birthday-dropdown .item .info .meta { font-size: 11px; color: #6a7a9a; }
+        .birthday-dropdown .item .days {
+            font-size: 12px;
+            font-weight: bold;
+            color: #f5576c;
+            white-space: nowrap;
+        }
+        .birthday-dropdown .item.today .name { color: #f5576c; }
+        .birthday-dropdown .item.today .days { color: #f5576c; }
+        .birthday-dropdown .empty { color: #6a7a9a; text-align: center; padding: 12px 0; font-size: 14px; }
+        .birthday-dropdown .reload-btn {
+            background: transparent;
+            color: #4a9eff;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 0;
+            text-align: center;
+            width: 100%;
+            border-top: 1px solid #1a2a3a;
+            margin-top: 6px;
+            padding-top: 8px;
+        }
+        .birthday-dropdown .reload-btn:hover { color: #7db8ff; }
+
+        .logout-btn { 
+            padding: 8px 20px; 
+            background: #e74c3c; 
+            color: #fff; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: background 0.2s;
+        }
+        .logout-btn:hover { background: #c0392b; }
+
+        .tabs { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 24px; 
+            border-bottom: 1px solid #2a3a5e; 
+            padding-bottom: 8px; 
+            flex-wrap: wrap;
+        }
+        .tab { 
+            padding: 10px 24px; 
+            background: transparent; 
+            color: #6a7a9a; 
+            border: none; 
+            border-radius: 8px 8px 0 0; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #fff; background: #0f1a2e; }
+        .tab.active { color: #4a9eff; background: #0f1a2e; border-bottom: 2px solid #4a9eff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { 
+            background: #16213e; 
+            padding: 24px; 
+            border-radius: 12px; 
+            margin-bottom: 24px;
+            border: 1px solid #2a3a5e;
+        }
+        .card h2 { margin-bottom: 20px; font-size: 20px; color: #4a9eff; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 500; 
+            font-size: 14px; 
+            color: #a0b4d0; 
+        }
+        .form-group input, 
+        .form-group textarea, 
+        .form-group select {
+            width: 100%; 
+            padding: 10px 14px; 
+            border: 1px solid #2a3a5e; 
+            border-radius: 8px;
+            background: #0f1a2e; 
+            color: #fff; 
+            font-size: 15px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .btn-primary { 
+            padding: 12px 32px; 
+            background: #27ae60; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #1e8449; }
+        .btn-secondary { 
+            padding: 8px 16px; 
+            background: #2a3a5e; 
+            color: #fff; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .btn-secondary:hover { background: #3a4a6e; }
+        .btn-danger {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .btn-danger:hover { background: #c0392b; }
+
+        .form-message { 
+            margin-top: 12px; 
+            padding: 10px; 
+            border-radius: 6px; 
+            text-align: center; 
+        }
+        .form-message.success { background: #1a3a2a; color: #7ddfa0; }
+        .form-message.error { background: #3a1a1a; color: #ff6b6b; }
+        
+        .slide-item, .screen-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 16px; 
+            background: #0f1a2e; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            border-left: 4px solid #4a9eff;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .slide-info, .screen-info { flex: 1; }
+        .slide-item .title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .screen-header { 
+            display: flex; 
+            gap: 16px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
+        .screen-name { font-weight: 600; }
+        .screen-code { 
+            background: #1a2a4a; 
+            padding: 2px 12px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #4a9eff; 
+        }
+        .screen-status.online { color: #27ae60; }
+        .screen-status.offline { color: #6a7a9a; }
+        .screen-meta { font-size: 12px; color: #6a7a9a; margin-top: 4px; }
+        .screen-actions { 
+            display: flex; 
+            gap: 8px; 
+            align-items: center; 
+            flex-wrap: wrap;
+        }
+        .btn-connect { 
+            padding: 6px 16px; 
+            background: #27ae60; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-connect:hover { background: #1e8449; }
+        .btn-disconnect { 
+            padding: 6px 16px; 
+            background: #e67e22; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-disconnect:hover { background: #d35400; }
+        .delete-btn { 
+            padding: 6px 14px; 
+            background: transparent; 
+            color: #ff6b6b; 
+            border: 1px solid #ff6b6b; 
+            border-radius: 6px; 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover { background: #ff6b6b; color: #fff; }
+        .empty-state { 
+            text-align: center; 
+            padding: 20px; 
+            color: #6a7a9a; 
+            font-size: 14px; 
+        }
+        .loading { color: #6a7a9a; text-align: center; padding: 10px; font-size: 14px; }
+        .hidden { display: none !important; }
+
+        .image-preview { 
+            margin-top: 10px; 
+            padding: 10px; 
+            background: #0f1a2e; 
+            border-radius: 8px; 
+            border: 1px solid #2a3a5e; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            flex-wrap: wrap;
+        }
+        .image-preview img { 
+            max-width: 150px; 
+            max-height: 100px; 
+            border-radius: 6px; 
+            object-fit: cover; 
+        }
+        .image-preview .image-info { 
+            flex: 1; 
+            color: #6a7a9a; 
+            font-size: 13px; 
+        }
+
+        .color-card { 
+            margin-top: 16px; 
+            background: #0f1a2e; 
+            padding: 16px; 
+            border-radius: 8px; 
+        }
+        .color-card h3 { 
+            color: #4a9eff; 
+            margin-bottom: 12px; 
+            font-size: 16px; 
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .file-input-wrapper input[type="file"] {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .header-left { flex-wrap: wrap; }
+            .birthday-dropdown { left: auto; right: 0; min-width: 200px; }
+            .tabs { flex-wrap: wrap; justify-content: center; }
+            .slide-item, .screen-item { flex-direction: column; align-items: stretch; }
+            .screen-actions { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Управление системой</h1>
+                <div class="birthday-widget" id="birthdayWidget">
+                    <span class="icon">🎂</span>
+                    <span class="badge" id="birthdayBadge">0</span>
+                    <span class="arrow">▼</span>
+                    <div class="birthday-dropdown" id="birthdayDropdown">
+                        <div id="birthdayList"><p class="loading">Загрузка...</p></div>
+                        <button class="reload-btn" id="refreshBirthdayBtn">🔄 Обновить</button>
+                    </div>
+                </div>
+            </div>
+            <button id="logoutBtn" class="logout-btn">Выйти</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="slides">Слайды</button>
+            <button class="tab" data-tab="screens">Экраны</button>
+        </div>
+
+        <div id="tabSlides" class="tab-content active">
+            <div class="card">
+                <h2>Создать слайд</h2>
+                <form id="slideForm">
+                    <div class="form-group">
+                        <label>Тип слайда</label>
+                        <select id="slideType" required>
+                            <option value="text">Объявление</option>
+                            <option value="greeting">Поздравление</option>
+                            <option value="metric">Производственные показатели</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Заголовок</label>
+                        <input id="title" placeholder="Введите заголовок" />
+                    </div>
+
+                    <div id="contentGroup" class="form-group">
+                        <label>Содержание</label>
+                        <textarea id="content" placeholder="Введите текст слайда"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Изображение</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="imageFile" accept="image/*" />
+                            <button type="button" id="uploadImageBtn" class="btn-secondary">Загрузить</button>
+                        </div>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="imagePreviewImg" />
+                            <span class="image-info" id="imagePreviewName">Файл загружен</span>
+                            <button type="button" id="removeImageBtn" class="delete-btn" style="padding: 4px 12px;">✕</button>
+                        </div>
+                        <input type="hidden" id="imageUrl" value="" />
+                        <div id="imageMessage" class="form-message"></div>
+                    </div>
+
+                    <div id="extraFields" class="hidden">
+                        <div class="form-group">
+                            <label>ФИО сотрудника</label>
+                            <input id="extraName" placeholder="Введите ФИО" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Дата начала</label>
+                            <input id="startDate" type="datetime-local" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Дата окончания</label>
+                            <input id="endDate" type="datetime-local" required />
+                        </div>
+                    </div>
+
+                    <div class="color-card">
+                        <h3>Редактор слайда</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Цвет фона</label>
+                                <input type="color" id="bgColor" value="#f5576c" style="width: 100%; padding: 4px; height: 40px; cursor: pointer;" />
+                            </div>
+                            <div class="form-group">
+                                <label>Цвет текста</label>
+                                <input type="color" id="textColor" value="#ffffff" style="width: 100%; padding: 4px; height: 40px; cursor: pointer;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Опубликовать</button>
+                </form>
+                <div id="formMessage" class="form-message"></div>
+            </div>
+
+            <div class="card">
+                <h2>Все слайды</h2>
+                <div id="slidesList"><p class="loading">Загрузка...</p></div>
+            </div>
+        </div>
+
+        <div id="tabScreens" class="tab-content">
+            <div class="card">
+                <h2>Подключить экран</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input id="screenName" placeholder="Введите название экрана" />
+                    </div>
+                    <div class="form-group">
+                        <label>Расположение</label>
+                        <input id="screenLocation" placeholder="Введите расположение" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Код доступа (3 цифры)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input id="screenCode" placeholder="000" maxlength="3" style="flex: 1;" />
+                            <button type="button" id="generateCodeBtn" class="btn-secondary">Сгенерировать</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="button" id="addScreenBtn" class="btn-primary" style="width:100%;">Добавить экран</button>
+                    </div>
+                </div>
+                <div id="screenFormMessage" class="form-message"></div>
+            </div>
+
+            <div class="card">
+                <h2>Список экранов</h2>
+                <div id="screensList"><p class="loading">Загрузка...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('token');
+        
+        if (!token) { 
+            window.location.href = 'main.html'; 
+        }
+
+        // Выход из системы
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            window.location.href = 'main.html';
+        });
+
+        // Переключение вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const tabId = 'tab' + this.dataset.tab.charAt(0).toUpperCase() + this.dataset.tab.slice(1);
+                const target = document.getElementById(tabId);
+                if (target) target.classList.add('active');
+                if (this.dataset.tab === 'screens') {
+                    loadScreens();
+                }
+            });
+        });
+
+        // Загрузка картинки
+        document.getElementById('uploadImageBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            if (!file) {
+                showImageMessage('Выберите файл', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(API_BASE + '/slides/upload-image', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('imageUrl').value = data.image_url;
+                    const preview = document.getElementById('imagePreview');
+                    const img = document.getElementById('imagePreviewImg');
+                    img.src = data.image_url;
+                    document.getElementById('imagePreviewName').textContent = file.name;
+                    preview.classList.remove('hidden');
+                    document.getElementById('imageFile').value = '';
+                    showImageMessage('Картинка загружена', 'success');
+                } else {
+                    const err = await response.json();
+                    showImageMessage('Ошибка: ' + (err.detail || 'Неизвестная ошибка'), 'error');
+                }
+            } catch {
+                showImageMessage('Ошибка подключения к серверу', 'error');
+            }
+        });
+
+        // Удаление картинки
+        document.getElementById('removeImageBtn').addEventListener('click', function() {
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('imageFile').value = '';
+        });
+
+        function showImageMessage(text, type) {
+            const el = document.getElementById('imageMessage');
+            el.textContent = text;
+            el.className = 'form-message ' + type;
+            setTimeout(() => { el.textContent = ''; el.className = 'form-message'; }, 5000);
+        }
+
+        // Виджет ДР
+        const widget = document.getElementById('birthdayWidget');
+        const dropdown = document.getElementById('birthdayDropdown');
+        const badge = document.getElementById('birthdayBadge');
+        const list = document.getElementById('birthdayList');
+
+        widget.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+            if (dropdown.classList.contains('open')) {
+                loadBirthdayWidget();
+            }
+        });
+
+        document.addEventListener('click', function() {
+            dropdown.classList.remove('open');
+        });
+
+        document.getElementById('refreshBirthdayBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            loadBirthdayWidget();
+        });
+
+        async function loadBirthdayWidget() {
+            list.innerHTML = '<p class="loading">Загрузка...</p>';
+            try {
+                const response = await fetch(API_BASE + '/employees/birthdays/upcoming', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.length;
+                    badge.textContent = count;
+                    badge.className = 'badge' + (count === 0 ? ' zero' : '');
+                    
+                    if (count === 0) {
+                        list.innerHTML = '<div class="empty">✅ Нет ДР в ближайшие 3 дня</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.forEach(emp => {
+                        const isToday = emp.days_until === 0;
+                        const daysText = isToday ? '🎉 Сегодня!' : `${emp.days_until} дн.`;
+                        html += `
+                            <div class="item ${isToday ? 'today' : ''}">
+                                <div class="info">
+                                    <div class="name">${emp.name}</div>
+                                    <div class="meta">${emp.department || ''} • ${emp.age} лет</div>
+                                </div>
+                                <div class="days">${daysText}</div>
+                            </div>
+                        `;
+                    });
+                    list.innerHTML = html;
+                } else {
+                    list.innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
+                }
+            } catch {
+                list.innerHTML = '<div class="empty">❌ Ошибка подключения</div>';
+            }
+        }
+
+        loadBirthdayWidget();
+
+        // Создание слайда
+        document.getElementById('slideForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const type = document.getElementById('slideType').value;
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const imageUrl = document.getElementById('imageUrl').value || null;
+
+            // Валидация дат
+            if (!startDate || !endDate) {
+                showFormMessage('⚠️ Заполните даты начала и окончания', 'error');
+                return;
+            }
+
+            if (new Date(startDate) >= new Date(endDate)) {
+                showFormMessage('⚠️ Дата начала должна быть раньше даты окончания', 'error');
+                return;
+            }
+
+            const styles = {
+                bg_color: document.getElementById('bgColor').value,
+                text_color: document.getElementById('textColor').value
+            };
+
+            // Для метрик - специальный эндпоинт
+            if (type === 'metric') {
+                try {
+                    const response = await fetch(API_BASE + '/slides/create-metric-slide', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: title || '📊 Производственные показатели',
+                            start_date: startDate,
+                            end_date: endDate,
+                            styles: styles
+                        })
+                    });
+                    const msg = document.getElementById('formMessage');
+                    if (response.ok) {
+                        const data = await response.json();
+                        msg.textContent = '✅ ' + (data.message || 'Слайд создан!');
+                        msg.className = 'form-message success';
+                        resetSlideForm();
+                        loadSlides();
+                    } else {
+                        const err = await response.json();
+                        msg.textContent = '❌ ' + (err.detail || 'Ошибка');
+                        msg.className = 'form-message error';
+                    }
+                } catch {
+                    document.getElementById('formMessage').textContent = '❌ Ошибка подключения';
+                    document.getElementById('formMessage').className = 'form-message error';
+                }
+                return;
+            }
+
+            // Для остальных типов
+            let extraData = null; // ← ИЗМЕНЕНО: теперь всегда null
+            
+            // Если нужно добавить другие данные для других типов, можно расширить
+            if (type === 'greeting') {
+                // ФИО больше не запрашивается, отправляем null
+                // Бэкенд сам определит, как обработать поздравление
+                extraData = null;
+            }
+
+            const slideData = {
+                type: type,
+                title: title || null,
+                content: content || null,
+                image_url: imageUrl,
+                extra_data: extraData, // ← ИЗМЕНЕНО: отправляем null вместо объекта с name
+                start_date: startDate,
+                end_date: endDate,
+                priority: 0,
+                styles: styles
+            };
+
+            try {
+                const response = await fetch(API_BASE + '/slides', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(slideData)
+                });
+
+                const msg = document.getElementById('formMessage');
+                if (response.ok) {
+                    msg.textContent = '✅ Слайд создан!';
+                    msg.className = 'form-message success';
+                    resetSlideForm();
+                    loadSlides();
+                } else {
+                    const err = await response.json();
+                    msg.textContent = '❌ ' + (err.detail || 'Неизвестная ошибка');
+                    msg.className = 'form-message error';
+                }
+            } catch {
+                document.getElementById('formMessage').textContent = '❌ Ошибка подключения';
+                document.getElementById('formMessage').className = 'form-message error';
+            }
+        });
+
+        function resetSlideForm() {
+            document.getElementById('slideForm').reset();
+            document.getElementById('extraFields').classList.add('hidden');
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('imageFile').value = '';
+            // Устанавливаем значения цветов по умолчанию
+            document.getElementById('bgColor').value = '#f5576c';
+            document.getElementById('textColor').value = '#ffffff';
+        }
+
+        function showFormMessage(text, type) {
+            const el = document.getElementById('formMessage');
+            el.textContent = text;
+            el.className = 'form-message ' + type;
+            setTimeout(() => { el.textContent = ''; el.className = 'form-message'; }, 5000);
+        }
+
+        // Загрузка списка слайдов
+        async function loadSlides() {
+            try {
+                const response = await fetch(API_BASE + '/slides', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const slides = await response.json();
+                    renderSlides(slides);
+                } else {
+                    document.getElementById('slidesList').innerHTML = '<div class="empty-state">❌ Ошибка загрузки слайдов</div>';
+                }
+            } catch {
+                document.getElementById('slidesList').innerHTML = '<div class="empty-state">❌ Ошибка подключения</div>';
+            }
+        }
+
+        function renderSlides(slides) {
+            const container = document.getElementById('slidesList');
+            if (!slides || !slides.length) {
+                container.innerHTML = '<div class="empty-state">Нет слайдов</div>';
+                return;
+            }
+            const types = { text: 'Текст', greeting: 'Поздравление', image: 'Изображение', metric: 'Показатель' };
+            container.innerHTML = slides.map(function(s) {
+                const now = new Date();
+                const start = new Date(s.start_date);
+                const end = new Date(s.end_date);
+                const active = s.is_active !== false && start <= now && end >= now;
+                return '<div class="slide-item" style="border-left-color: ' + (active ? '#27ae60' : '#6a7a9a') + '">' +
+                    '<div class="slide-info">' +
+                    '<div class="title">' + (s.title || '(без заголовка)') + '</div>' +
+                    (s.image_url ? '<div style="font-size:12px;color:#4a9eff;">🖼️ Есть изображение</div>' : '') +
+                    '<div style="font-size:12px;color:#6a7a9a;">' +
+                    (types[s.type] || s.type) +
+                    (active ? ' ✅ Активен' : ' ⏸️ Неактивен') +
+                    ' ' + new Date(s.start_date).toLocaleDateString() + ' → ' + new Date(s.end_date).toLocaleDateString() +
+                    '</div></div>' +
+                    '<button class="delete-btn" onclick="deleteSlide(' + s.id + ')">Удалить</button></div>';
+            }).join('');
+        }
+
+        async function deleteSlide(id) {
+            if (!confirm('Удалить этот слайд?')) return;
+            try {
+                const response = await fetch(API_BASE + '/slides/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    loadSlides();
+                } else {
+                    alert('Ошибка при удалении слайда');
+                }
+            } catch {
+                alert('Ошибка подключения');
+            }
+        }
+
+        // Экраны
+        document.getElementById('generateCodeBtn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/api/generate-code');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('screenCode').value = data.code || '000';
+                } else {
+                    document.getElementById('screenCode').value = String(Math.floor(100 + Math.random() * 900));
+                }
+            } catch (error) {
+                console.error('Ошибка генерации кода:', error);
+                document.getElementById('screenCode').value = String(Math.floor(100 + Math.random() * 900));
+            }
+        });
+
+        document.getElementById('addScreenBtn').addEventListener('click', async function() {
+            const code = document.getElementById('screenCode').value.trim();
+            if (!code || code.length !== 3 || !/^\d{3}$/.test(code)) {
+                showScreenMessage('Введите корректный код из 3 цифр', 'error');
+                return;
+            }
+            
+            const data = {
+                code: code,
+                name: document.getElementById('screenName').value.trim() || null,
+                location: document.getElementById('screenLocation').value.trim() || null
+            };
+            
+            try {
+                const response = await fetch(API_BASE + '/screens', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    showScreenMessage('✅ Экран добавлен', 'success');
+                    document.getElementById('screenName').value = '';
+                    document.getElementById('screenLocation').value = '';
+                    document.getElementById('screenCode').value = '';
+                    loadScreens();
+                } else {
+                    const err = await response.json();
+                    showScreenMessage('❌ Ошибка: ' + (err.detail || 'Неизвестная ошибка'), 'error');
+                }
+            } catch {
+                showScreenMessage('❌ Ошибка подключения к серверу', 'error');
+            }
+        });
+
+        function showScreenMessage(text, type) {
+            const el = document.getElementById('screenFormMessage');
+            el.textContent = text;
+            el.className = 'form-message ' + type;
+            setTimeout(() => { el.textContent = ''; el.className = 'form-message'; }, 5000);
+        }
+
+        async function loadScreens() {
+            try {
+                const response = await fetch(API_BASE + '/screens', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const screens = await response.json();
+                    renderScreens(screens);
+                } else {
+                    document.getElementById('screensList').innerHTML = '<div class="empty-state">❌ Ошибка загрузки экранов</div>';
+                }
+            } catch {
+                document.getElementById('screensList').innerHTML = '<div class="empty-state">❌ Ошибка подключения</div>';
+            }
+        }
+
+        function renderScreens(screens) {
+            const container = document.getElementById('screensList');
+            if (!screens || !screens.length) {
+                container.innerHTML = '<div class="empty-state">Нет экранов</div>';
+                return;
+            }
+            container.innerHTML = screens.map(function(s) {
+                return '<div class="screen-item">' +
+                    '<div class="screen-info">' +
+                    '<div class="screen-header">' +
+                    '<span class="screen-name">' + (s.name || 'Без названия') + '</span>' +
+                    '<span class="screen-code">' + s.code + '</span>' +
+                    '<span class="screen-status ' + (s.is_online ? 'online' : 'offline') + '">' + (s.is_online ? '🟢 Онлайн' : '⚪ Оффлайн') + '</span>' +
+                    (s.is_connected ? '🔗 Подключён' : '⏳ Ожидает') +
+                    '</div>' +
+                    (s.location ? '<div class="screen-meta">📍 ' + s.location + '</div>' : '') +
+                    '</div>' +
+                    '<div class="screen-actions">' +
+                    (!s.is_connected ? '<button class="btn-connect" onclick="connectScreen(' + s.id + ')">Подключить</button>' : '<button class="btn-disconnect" onclick="disconnectScreen(' + s.id + ')">Отключить</button>') +
+                    '<button class="delete-btn" onclick="deleteScreen(' + s.id + ')">Удалить</button>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        async function connectScreen(id) {
+            try {
+                const response = await fetch(API_BASE + '/screens/' + id + '/connect', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    loadScreens();
+                } else {
+                    alert('Ошибка подключения экрана');
+                }
+            } catch {
+                alert('Ошибка подключения');
+            }
+        }
+
+        async function disconnectScreen(id) {
+            if (!confirm('Отключить этот экран?')) return;
+            try {
+                const response = await fetch(API_BASE + '/screens/' + id + '/disconnect', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    loadScreens();
+                } else {
+                    alert('Ошибка отключения экрана');
+                }
+            } catch {
+                alert('Ошибка подключения');
+            }
+        }
+
+        async function deleteScreen(id) {
+            if (!confirm('Удалить этот экран?')) return;
+            try {
+                const response = await fetch(API_BASE + '/screens/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    loadScreens();
+                } else {
+                    alert('Ошибка удаления экрана');
+                }
+            } catch {
+                alert('Ошибка подключения');
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSlides();
+            loadScreens();
+        });
+
+        // Автообновление
+        setInterval(loadSlides, 30000);
+        setInterval(loadScreens, 30000);
+    </script>
+</body>
+</html>
